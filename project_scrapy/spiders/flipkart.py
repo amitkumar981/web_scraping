@@ -2,13 +2,13 @@ import scrapy
 
 class FlipkartSpider(scrapy.Spider):
     name = "flipkart"
-    allowed_domains = ["flipkart.com"]
+    allowed_domains = ["www.flipkart.com"]
     start_urls = ["https://www.flipkart.com/search?q=mobiles"]
 
     def start_requests(self):
         # Setting custom headers
         yield scrapy.Request(
-            url=self.start_urls[0], 
+            url='https://www.flipkart.com/search?q=mobiles', 
             callback=self.parse,
             headers={
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.110 Safari/537.36'
@@ -16,18 +16,19 @@ class FlipkartSpider(scrapy.Spider):
         )
 
     def parse(self, response):
-        # Extracting product details
-        products = response.xpath('//div[@class="_1AtVbE"]')
+
+        products = response.xpath('//div[contains(@class,"yKfJKb row")]')
         for product in products:
-            name = product.xpath('.//div[@class="_4rR01T"]/text()').get()
-            specifications = product.xpath('.//ul[@class="_1xgFaf"]/li/text()').getall()
+            name = product.xpath('.//div[contains(@class,"KzDlHZ")]/text()').get()
+            specifications = product.xpath('.//ul[contains(@class,"G4BRas")]/li')
 
-            ram = specifications[0] if len(specifications) > 0 else None
-            display_size = specifications[1] if len(specifications) > 1 else None
-            camera = specifications[2] if len(specifications) > 2 else None
-            battery = specifications[3] if len(specifications) > 3 else None
-
-            price = product.xpath('.//div[@class="_30jeq3 _1_WHN1"]/text()').get()
+            # Safely accessing each specification if available
+            ram = specifications[1].xpath('.//text()').get() if len(specifications) > 1 else None
+            display_size = specifications[2].xpath('.//text()').get() if len(specifications) > 2 else None
+            camera = specifications[3].xpath('.//text()').get() if len(specifications) > 3 else None
+            battery = specifications[4].xpath('.//text()').get() if len(specifications) > 4 else None
+            
+            price = product.xpath('.//div[contains(@class,"Nx9bqj _4b5DiR")]/text()').get()
 
             yield {
                 'name': name,
@@ -38,19 +39,14 @@ class FlipkartSpider(scrapy.Spider):
                 'price': price
             }
 
-        # Handling pagination
-        next_page = response.xpath('//a[@class="_1LKTO3"][last()]/@href').get()
-        if next_page:
-            next_page_url = response.urljoin(next_page)
-            yield scrapy.Request(
-                url=next_page_url,
-                callback=self.parse,
-                headers={
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.110 Safari/537.36'
-                }
-            )
-
-
+        second_page=response.xpath('//a[contains(@class,"cn++Ap")][2]/@href').get()
+        second_page_url=response.urljoin(second_page)
+        if second_page:
+            yield response.follow(url=second_page_url,callback=self.parse)
+        url=response.xpath('//a[contains(@class,"_9QVEpD")][2]/@href').get()
+        next_page_url=response.urljoin(url)
+        if next_page_url:
+            yield response.follow(url=next_page_url,callback=self.parse)
             
 
 
