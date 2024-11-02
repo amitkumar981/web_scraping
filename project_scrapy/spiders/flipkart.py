@@ -23,10 +23,11 @@ class FlipkartSpider(scrapy.Spider):
             specifications = product.xpath('.//ul[contains(@class,"G4BRas")]/li')
 
             # Safely accessing each specification if available
-            ram = specifications[1].xpath('.//text()').get() if len(specifications) > 1 else None
+            ram = specifications[0].xpath('.//text()').get() if len(specifications) > 1 else None
             display_size = specifications[2].xpath('.//text()').get() if len(specifications) > 2 else None
             camera = specifications[3].xpath('.//text()').get() if len(specifications) > 3 else None
             battery = specifications[4].xpath('.//text()').get() if len(specifications) > 4 else None
+            processor = specifications[5].xpath('.//text()').get() if len(specifications) > 5 else None
             
             price = product.xpath('.//div[contains(@class,"Nx9bqj _4b5DiR")]/text()').get()
 
@@ -36,7 +37,8 @@ class FlipkartSpider(scrapy.Spider):
                 'display_size': display_size,
                 'camera': camera,
                 'battery': battery,
-                'price': price
+                'price': price,
+                'processor':processor
             }
 
         second_page=response.xpath('//a[contains(@class,"cn++Ap")][2]/@href').get()
