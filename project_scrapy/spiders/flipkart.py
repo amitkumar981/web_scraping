@@ -20,31 +20,38 @@ class FlipkartSpider(scrapy.Spider):
         products = response.xpath('//div[contains(@class,"yKfJKb row")]')
         for product in products:
             name = product.xpath('.//div[contains(@class,"KzDlHZ")]/text()').get()
-            specifications = product.xpath('.//ul[contains(@class,"G4BRas")]/li')
-
-            # Safely accessing each specification if available
-            ram = specifications[0].xpath('.//text()').get() if len(specifications) > 1 else None
-            display_size = specifications[2].xpath('.//text()').get() if len(specifications) > 2 else None
-            camera = specifications[3].xpath('.//text()').get() if len(specifications) > 3 else None
-            battery = specifications[4].xpath('.//text()').get() if len(specifications) > 4 else None
-            processor = specifications[5].xpath('.//text()').get() if len(specifications) > 5 else None
             
             price = product.xpath('.//div[contains(@class,"Nx9bqj _4b5DiR")]/text()').get()
 
+            # Safely accessing each specification if available
+        specifications=response.xpath('//ul[contains(@class,"G4BRas")]')
+        for specification in specifications:
+            ram=specification.xpath('./li[1]/text()').get()
+            display=specification.xpath('./li[2]/text()').get()
+            camera=specification.xpath('./li[3]/text()').get()
+            battery=specification.xpath('./li[4]/text()').get()
+            processor=specification.xpath('./li[5]/text()').get()
+
+
+
+            
+            
+
             yield {
                 'name': name,
-                'ram': ram,
-                'display_size': display_size,
-                'camera': camera,
-                'battery': battery,
+                'ram':ram,
+               'display':display,
+                'camera':camera,
+                'battery':battery,
+                'processor':processor,
                 'price': price,
-                'processor':processor
+              
             }
 
         second_page=response.xpath('//a[contains(@class,"cn++Ap")][2]/@href').get()
         second_page_url=response.urljoin(second_page)
         if second_page:
-            yield response.follow(url=second_page_url,callback=self.parse)
+           yield response.follow(url=second_page_url,callback=self.parse)
         url=response.xpath('//a[contains(@class,"_9QVEpD")][2]/@href').get()
         next_page_url=response.urljoin(url)
         if next_page_url:
